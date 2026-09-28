@@ -1,13 +1,14 @@
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
-interface AuthRequest extends Request {
+export interface AuthRequest extends Request {
   user?: {
     id: number;
     role: string;
   };
 }
 
+// Authentication middleware
 export const authenticate = (
   req: AuthRequest,
   res: Response,
@@ -46,4 +47,23 @@ export const authenticate = (
       message: "Invalid or expired token",
     });
   }
+};
+
+// Authorization middleware
+export const authorize = (role: string) => {
+  return (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({
+        message: "Authentication required",
+      });
+    }
+
+    if (req.user.role !== role) {
+      return res.status(403).json({
+        message: "You are not authorized to perform this action",
+      });
+    }
+
+    next();
+  };
 };
