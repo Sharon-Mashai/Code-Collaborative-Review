@@ -34,3 +34,55 @@ export const getUserProfile = async (
     });
   }
 };
+
+// Update user profile
+export const updateUserProfile = async (
+  req: AuthRequest,
+  res: Response,
+) => {
+  try {
+    const { id } = req.params;
+    const { name, email, display_picture } = req.body;
+
+    // Check required fields
+    if (!name || !email) {
+      return res.status(400).json({
+        message: "Name and email are required",
+      });
+    }
+
+    // Check if user exists
+    const existingUser = await pool.query(
+      "SELECT * FROM users WHERE id = $1",
+      [id],
+    );
+
+    if (existingUser.rows.length === 0) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    // Update user profile
+    const updatedUser = await pool.query(
+      `UPDATE users
+       SET name = $1,
+           email = $2,
+           display_picture = $3
+       WHERE id = $4
+       RETURNING id, name, email, role, display_picture`,
+      [name, email, display_picture, id],
+    );
+
+    return res.status(200).json({
+      message: "User profile updated successfully",
+      user: updatedUser.rows[0],
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
