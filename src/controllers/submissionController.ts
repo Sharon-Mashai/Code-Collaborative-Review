@@ -136,3 +136,69 @@ export const getSubmissionById = async (
     });
   }
 };
+
+// Update submission status
+export const updateSubmissionStatus = async (
+  req: AuthRequest,
+  res: Response,
+) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    // Check required field
+    if (!status) {
+      return res.status(400).json({
+        message: "Status is required",
+      });
+    }
+
+    // Allowed submission statuses
+    const allowedStatuses = [
+      "pending",
+      "in_review",
+      "approved",
+      "changes_requested",
+    ];
+
+    // Check if status is valid
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        message:
+          "Status must be pending, in_review, approved or changes_requested",
+      });
+    }
+
+    // Check if submission exists
+    const existingSubmission = await pool.query(
+      "SELECT id FROM submissions WHERE id = $1",
+      [id],
+    );
+
+    if (existingSubmission.rows.length === 0) {
+      return res.status(404).json({
+        message: "Submission not found",
+      });
+    }
+
+    // Update submission status
+    const updatedSubmission = await pool.query(
+      `UPDATE submissions
+       SET status = $1
+       WHERE id = $2
+       RETURNING id, project_id, submitted_by, code, status`,
+      [status, id],
+    );
+
+    return res.status(200).json({
+      message: "Submission status updated successfully",
+      submission: updatedSubmission.rows[0],
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
