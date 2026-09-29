@@ -86,3 +86,41 @@ export const updateUserProfile = async (
     });
   }
 };
+
+// Delete user profile
+export const deleteUserProfile = async (
+  req: AuthRequest,
+  res: Response,
+) => {
+  try {
+    const { id } = req.params;
+
+    // Check if user exists
+    const existingUser = await pool.query(
+      "SELECT * FROM users WHERE id = $1",
+      [id],
+    );
+
+    if (existingUser.rows.length === 0) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    // Delete user
+    await pool.query(
+      "DELETE FROM users WHERE id = $1",
+      [id],
+    );
+
+    return res.status(200).json({
+      message: "User profile deleted successfully",
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
