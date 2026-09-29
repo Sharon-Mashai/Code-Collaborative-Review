@@ -202,3 +202,59 @@ export const updateSubmissionStatus = async (
     });
   }
 };
+
+// Delete submission
+export const deleteSubmission = async (
+  req: AuthRequest,
+  res: Response,
+) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({
+        message: "Authentication required",
+      });
+    }
+
+    // Check if submission exists
+    const existingSubmission = await pool.query(
+      `SELECT id, submitted_by
+       FROM submissions
+       WHERE id = $1`,
+      [id],
+    );
+
+    if (existingSubmission.rows.length === 0) {
+      return res.status(404).json({
+        message: "Submission not found",
+      });
+    }
+
+    const submission = existingSubmission.rows[0];
+
+    // Submitters can only delete their own submissions
+    if (submission.submitted_by !== userId) {
+      return res.status(403).json({
+        message: "You are not authorized to delete this submission",
+      });
+    }
+
+    // Delete submission
+    await pool.query(
+      "DELETE FROM submissions WHERE id = $1",
+      [id],
+    );
+
+    return res.status(200).json({
+      message: "Submission deleted successfully",
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
