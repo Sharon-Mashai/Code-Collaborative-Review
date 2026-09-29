@@ -44,6 +44,13 @@ export const updateUserProfile = async (
     const { id } = req.params;
     const { name, email, display_picture } = req.body;
 
+    // Check if the logged-in user is updating their own profile
+    if (req.user?.id !== Number(id)) {
+      return res.status(403).json({
+        message: "You are not authorized to update this profile",
+      });
+    }
+
     // Check required fields
     if (!name || !email) {
       return res.status(400).json({
@@ -94,6 +101,13 @@ export const deleteUserProfile = async (
 ) => {
   try {
     const { id } = req.params;
+
+    // Check if the logged-in user is deleting their own profile
+    if (req.user?.id !== Number(id)) {
+      return res.status(403).json({
+        message: "You are not authorized to delete this profile",
+      });
+    }
 
     // Check if user exists
     const existingUser = await pool.query(
