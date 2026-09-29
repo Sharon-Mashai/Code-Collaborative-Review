@@ -145,3 +145,56 @@ export const assignMember = async (
     });
   }
 };
+
+// Remove member from project
+export const removeMember = async (
+  req: AuthRequest,
+  res: Response,
+) => {
+  try {
+    const { id, userId } = req.params;
+
+    // Check if project exists
+    const project = await pool.query(
+      "SELECT id FROM projects WHERE id = $1",
+      [id],
+    );
+
+    if (project.rows.length === 0) {
+      return res.status(404).json({
+        message: "Project not found",
+      });
+    }
+
+    // Check if member is assigned to the project
+    const existingMember = await pool.query(
+      `SELECT *
+       FROM project_members
+       WHERE project_id = $1 AND user_id = $2`,
+      [id, userId],
+    );
+
+    if (existingMember.rows.length === 0) {
+      return res.status(404).json({
+        message: "Member is not assigned to this project",
+      });
+    }
+
+    // Remove member from project
+    await pool.query(
+      `DELETE FROM project_members
+       WHERE project_id = $1 AND user_id = $2`,
+      [id, userId],
+    );
+
+    return res.status(200).json({
+      message: "Member removed from project successfully",
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
