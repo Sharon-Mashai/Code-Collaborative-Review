@@ -1,6 +1,13 @@
 import { Router } from "express";
-import { createProject, getProjects,} from "../controllers/projectController.js";
-import { authenticate } from "../middleware/authMiddleware.js";
+import {
+  createProject,
+  getProjects,
+  assignMember,
+} from "../controllers/projectController.js";
+import {
+  authenticate,
+  authorize,
+} from "../middleware/authMiddleware.js";
 
 const router = Router();
 
@@ -9,5 +16,13 @@ router.post("/", authenticate, createProject);
 
 // Get all projects
 router.get("/", authenticate, getProjects);
+
+// Assign member to project
+router.post(
+  "/:id/members",
+  authenticate,
+  authorize("reviewer"),
+  assignMember,
+);
 
 export default router;
