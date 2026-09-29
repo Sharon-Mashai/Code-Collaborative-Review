@@ -1,8 +1,5 @@
 import { Router } from "express";
-import {
-  createProject,
-  getProjects,
-} from "../controllers/projectController.js";
+import { createProject, getProjects,} from "../controllers/projectController.js";
 import { authenticate } from "../middleware/authMiddleware.js";
 
 const router = Router();
