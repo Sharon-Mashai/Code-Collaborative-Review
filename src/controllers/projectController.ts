@@ -7,7 +7,7 @@ export const createProject = async (
   req: AuthRequest,
   res: Response,
 ) => {
-    try {
+  try {
     const { name } = req.body;
 
     // Check required field
@@ -37,6 +37,30 @@ export const createProject = async (
     return res.status(201).json({
       message: "Project created successfully",
       project: newProject.rows[0],
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
+// Get all projects
+export const getProjects = async (
+  req: AuthRequest,
+  res: Response,
+) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, name, created_by
+       FROM projects
+       ORDER BY id ASC`,
+    );
+
+    return res.status(200).json({
+      projects: result.rows,
     });
   } catch (error) {
     console.error(error);
