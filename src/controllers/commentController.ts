@@ -63,3 +63,44 @@ export const addComment = async (
     });
   }
 };
+
+// Get comments for submission
+export const getCommentsBySubmission = async (
+  req: AuthRequest,
+  res: Response,
+) => {
+  try {
+    const { id } = req.params;
+
+    // Check if submission exists
+    const submission = await pool.query(
+      "SELECT id FROM submissions WHERE id = $1",
+      [id],
+    );
+
+    if (submission.rows.length === 0) {
+      return res.status(404).json({
+        message: "Submission not found",
+      });
+    }
+
+    // Get comments for submission
+    const comments = await pool.query(
+      `SELECT id, submission_id, user_id, comment
+       FROM comments
+       WHERE submission_id = $1
+       ORDER BY id ASC`,
+      [id],
+    );
+
+    return res.status(200).json({
+      comments: comments.rows,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
