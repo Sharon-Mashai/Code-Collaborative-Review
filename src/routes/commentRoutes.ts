@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { addComment, getCommentsBySubmission, updateComment,} from "../controllers/commentController.js";
+import { addComment, getCommentsBySubmission, updateComment, deleteComment,} from "../controllers/commentController.js";
 import { authenticate, authorize } from "../middleware/authMiddleware.js";
 
 const router = Router();
@@ -12,5 +12,8 @@ router.get("/submissions/:id/comments", authenticate, getCommentsBySubmission);
 
 // Update comment - Reviewer only
 router.put("/comments/:id", authenticate, authorize("reviewer"), updateComment);
+
+// Delete comment - Reviewer only
+router.delete( "/comments/:id", authenticate, authorize("reviewer"), deleteComment,);
 
 export default router;
