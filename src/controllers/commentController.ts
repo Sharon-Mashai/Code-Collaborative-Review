@@ -170,3 +170,57 @@ export const updateComment = async (
     });
   }
 };
+
+// Delete comment
+export const deleteComment = async (
+  req: AuthRequest,
+  res: Response,
+) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({
+        message: "Authentication required",
+      });
+    }
+
+    // Check if comment exists
+    const existingComment = await pool.query(
+      `SELECT id, user_id
+       FROM comments
+       WHERE id = $1`,
+      [id],
+    );
+
+    if (existingComment.rows.length === 0) {
+      return res.status(404).json({
+        message: "Comment not found",
+      });
+    }
+
+    // Reviewer can only delete their own comment
+    if (existingComment.rows[0].user_id !== userId) {
+      return res.status(403).json({
+        message: "You are not authorized to delete this comment",
+      });
+    }
+
+    // Delete comment
+    await pool.query(
+      "DELETE FROM comments WHERE id = $1",
+      [id],
+    );
+
+    return res.status(200).json({
+      message: "Comment deleted successfully",
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
