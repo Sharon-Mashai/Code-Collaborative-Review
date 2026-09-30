@@ -104,3 +104,69 @@ export const getCommentsBySubmission = async (
     });
   }
 };
+
+// Update comment
+export const updateComment = async (
+  req: AuthRequest,
+  res: Response,
+) => {
+  try {
+    const { id } = req.params;
+    const { comment } = req.body;
+    const userId = req.user?.id;
+
+    // Check required field
+    if (!comment) {
+      return res.status(400).json({
+        message: "Comment is required",
+      });
+    }
+
+    if (!userId) {
+      return res.status(401).json({
+        message: "Authentication required",
+      });
+    }
+
+    // Check if comment exists
+    const existingComment = await pool.query(
+      `SELECT id, user_id
+       FROM comments
+       WHERE id = $1`,
+      [id],
+    );
+
+    if (existingComment.rows.length === 0) {
+      return res.status(404).json({
+        message: "Comment not found",
+      });
+    }
+
+    // Reviewer can only update their own comment
+    if (existingComment.rows[0].user_id !== userId) {
+      return res.status(403).json({
+        message: "You are not authorized to update this comment",
+      });
+    }
+
+    // Update comment
+    const updatedComment = await pool.query(
+      `UPDATE comments
+       SET comment = $1
+       WHERE id = $2
+       RETURNING id, submission_id, user_id, comment`,
+      [comment, id],
+    );
+
+    return res.status(200).json({
+      message: "Comment updated successfully",
+      comment: updatedComment.rows[0],
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
