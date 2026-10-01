@@ -4,10 +4,10 @@ import { authenticate, authorize } from "../middleware/authMiddleware.js";
 
 const router = Router();
 
-// Approve submission - Reviewer only
+// Approve submission by Reviewer only
 router.post( "/:id/approve", authenticate, authorize("reviewer"), approveSubmission,);
 
-// Request changes - Reviewer only
+// Request changes by Reviewer only
 router.post( "/:id/request-changes", authenticate, authorize("reviewer"), requestChanges,);
 
 // Get review history
