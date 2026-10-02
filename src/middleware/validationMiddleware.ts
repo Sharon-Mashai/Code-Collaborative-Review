@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 
-// Check that required body fields were provided
+// Check required body fields
 export const validateRequiredFields = (fields: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const missingFields = fields.filter((field) => {
@@ -23,7 +23,7 @@ export const validateRequiredFields = (fields: string[]) => {
   };
 };
 
-// Validate email format
+// Validate email
 export const validateEmail = (
   req: Request,
   res: Response,
@@ -31,7 +31,6 @@ export const validateEmail = (
 ) => {
   const { email } = req.body;
 
-  // Required-field middleware handles missing email
   if (email === undefined) {
     return next();
   }
@@ -61,7 +60,6 @@ export const validateRole = (
 ) => {
   const { role } = req.body;
 
-  // Required-field middleware handles missing role
   if (role === undefined) {
     return next();
   }
@@ -71,6 +69,35 @@ export const validateRole = (
   if (!allowedRoles.includes(role)) {
     return res.status(400).json({
       message: "Role must be either submitter or reviewer",
+    });
+  }
+
+  next();
+};
+
+// Validate submission status
+export const validateSubmissionStatus = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const { status } = req.body;
+
+  if (status === undefined) {
+    return next();
+  }
+
+  const allowedStatuses = [
+    "pending",
+    "in_review",
+    "approved",
+    "changes_requested",
+  ];
+
+  if (!allowedStatuses.includes(status)) {
+    return res.status(400).json({
+      message:
+        "Status must be pending, in_review, approved or changes_requested",
     });
   }
 
