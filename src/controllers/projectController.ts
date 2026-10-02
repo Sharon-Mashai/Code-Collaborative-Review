@@ -152,7 +152,7 @@ export const removeMember = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // Check if member is assigned to project
+    // Check if member is assigned
     const existingMember = await pool.query(
       `SELECT id
        FROM project_members
@@ -204,51 +204,64 @@ export const getProjectStats = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // Count submissions by status
+    // Count submissions by their current status
     const submissionStatsResult = await pool.query(
       `SELECT
         COUNT(*)::int AS total_submissions,
+
         COUNT(*) FILTER (
           WHERE status = 'pending'
         )::int AS pending,
+
         COUNT(*) FILTER (
           WHERE status = 'in_review'
         )::int AS in_review,
+
         COUNT(*) FILTER (
           WHERE status = 'approved'
         )::int AS approved,
+
         COUNT(*) FILTER (
           WHERE status = 'changes_requested'
         )::int AS changes_requested
+
        FROM submissions
        WHERE project_id = $1`,
       [id],
     );
 
-    const submissionStats = submissionStatsResult.rows[0];
+    const stats = submissionStatsResult.rows[0];
 
-    const totalSubmissions = Number(submissionStats.total_submissions);
+    const total = Number(stats.total_submissions);
+    const pending = Number(stats.pending);
+    const inReview = Number(stats.in_review);
+    const approved = Number(stats.approved);
+    const changesRequested = Number(stats.changes_requested);
 
-    const approved = Number(submissionStats.approved);
+    // Helper function for percentages
+    const calculatePercentage = (count: number): number => {
+      if (total === 0) {
+        return 0;
+      }
 
-    const changesRequested = Number(submissionStats.changes_requested);
+      return Number(((count / total) * 100).toFixed(2));
+    };
 
-    // Calculate percentages safely
-    const approvedPercentage =
-      totalSubmissions === 0
-        ? 0
-        : Number(((approved / totalSubmissions) * 100).toFixed(2));
+    const pendingPercentage = calculatePercentage(pending);
 
-    const changesRequestedPercentage =
-      totalSubmissions === 0
-        ? 0
-        : Number(((changesRequested / totalSubmissions) * 100).toFixed(2));
+    const inReviewPercentage = calculatePercentage(inReview);
+
+    const approvedPercentage = calculatePercentage(approved);
+
+    const changesRequestedPercentage = calculatePercentage(changesRequested);
 
     /*
-     * Average time between submission creation and its
-     * first review action.
+     * Calculate average review time using the FIRST
+     * review action for each submission.
      *
-     * EXTRACT(EPOCH ...) gives us seconds.
+     * Old submissions whose review happened before
+     * submissions.created_at are excluded because
+     * created_at was added later during development.
      */
     const averageReviewTimeResult = await pool.query(
       `SELECT
@@ -259,7 +272,9 @@ export const getProjectStats = async (req: AuthRequest, res: Response) => {
             )
           )
         ) AS average_seconds
+
        FROM submissions s
+
        JOIN (
          SELECT
            submission_id,
@@ -268,7 +283,9 @@ export const getProjectStats = async (req: AuthRequest, res: Response) => {
          GROUP BY submission_id
        ) first_review
          ON first_review.submission_id = s.id
-       WHERE s.project_id = $1`,
+
+       WHERE s.project_id = $1
+       AND first_review.first_review_at >= s.created_at`,
       [id],
     );
 
@@ -279,34 +296,55 @@ export const getProjectStats = async (req: AuthRequest, res: Response) => {
         ? null
         : Number((Number(averageSeconds) / 60).toFixed(2));
 
-    // Reviewer activity for this project
+    // Count every review action performed by each reviewer
     const reviewerActivityResult = await pool.query(
       `SELECT
         r.reviewer_id,
         u.name AS reviewer_name,
         COUNT(r.id)::int AS review_count
+
        FROM reviews r
+
        JOIN submissions s
          ON s.id = r.submission_id
+
        JOIN users u
          ON u.id = r.reviewer_id
+
        WHERE s.project_id = $1
-       GROUP BY r.reviewer_id, u.name
-       ORDER BY review_count DESC, r.reviewer_id ASC`,
+
+       GROUP BY
+         r.reviewer_id,
+         u.name
+
+       ORDER BY
+         review_count DESC,
+         r.reviewer_id ASC`,
       [id],
     );
 
-    // Find submission with the most comments
+    /*
+     * Find the submission with the highest number
+     * of comments.
+     */
     const mostCommentedResult = await pool.query(
       `SELECT
         s.id AS submission_id,
         COUNT(c.id)::int AS comment_count
+
        FROM submissions s
+
        LEFT JOIN comments c
          ON c.submission_id = s.id
+
        WHERE s.project_id = $1
+
        GROUP BY s.id
-       ORDER BY comment_count DESC, s.id ASC
+
+       ORDER BY
+         comment_count DESC,
+         s.id ASC
+
        LIMIT 1`,
       [id],
     );
@@ -330,14 +368,16 @@ export const getProjectStats = async (req: AuthRequest, res: Response) => {
       },
 
       submissions: {
-        total: totalSubmissions,
-        pending: Number(submissionStats.pending),
-        in_review: Number(submissionStats.in_review),
+        total,
+        pending,
+        in_review: inReview,
         approved,
         changes_requested: changesRequested,
       },
 
       percentages: {
+        pending: pendingPercentage,
+        in_review: inReviewPercentage,
         approved: approvedPercentage,
         changes_requested: changesRequestedPercentage,
       },
