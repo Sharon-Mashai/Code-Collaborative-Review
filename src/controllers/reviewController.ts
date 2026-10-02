@@ -15,8 +15,9 @@ export const approveSubmission = async (req: AuthRequest, res: Response) => {
     }
 
     // Check if submission exists
+    // We also need submitted_by so we know who should receive the notification
     const existingSubmission = await pool.query(
-      `SELECT id
+      `SELECT id, submitted_by
        FROM submissions
        WHERE id = $1`,
       [id],
@@ -28,7 +29,9 @@ export const approveSubmission = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // Update submission status to approved
+    const submitterId = existingSubmission.rows[0].submitted_by;
+
+    // Update submission status
     const updatedSubmission = await pool.query(
       `UPDATE submissions
        SET status = $1
@@ -47,6 +50,16 @@ export const approveSubmission = async (req: AuthRequest, res: Response) => {
       VALUES ($1, $2, $3)
       RETURNING id, submission_id, reviewer_id, action, created_at`,
       [id, reviewerId, "approved"],
+    );
+
+    // Create notification for the submitter
+    await pool.query(
+      `INSERT INTO notifications (
+        user_id,
+        message
+      )
+      VALUES ($1, $2)`,
+      [submitterId, `Your submission ${id} has been approved`],
     );
 
     return res.status(200).json({
@@ -77,7 +90,7 @@ export const requestChanges = async (req: AuthRequest, res: Response) => {
 
     // Check if submission exists
     const existingSubmission = await pool.query(
-      `SELECT id
+      `SELECT id, submitted_by
        FROM submissions
        WHERE id = $1`,
       [id],
@@ -88,6 +101,8 @@ export const requestChanges = async (req: AuthRequest, res: Response) => {
         message: "Submission not found",
       });
     }
+
+    const submitterId = existingSubmission.rows[0].submitted_by;
 
     // Update submission status
     const updatedSubmission = await pool.query(
@@ -108,6 +123,16 @@ export const requestChanges = async (req: AuthRequest, res: Response) => {
       VALUES ($1, $2, $3)
       RETURNING id, submission_id, reviewer_id, action, created_at`,
       [id, reviewerId, "changes_requested"],
+    );
+
+    // Create notification for the submitter
+    await pool.query(
+      `INSERT INTO notifications (
+        user_id,
+        message
+      )
+      VALUES ($1, $2)`,
+      [submitterId, `Changes have been requested for your submission ${id}`],
     );
 
     return res.status(200).json({
