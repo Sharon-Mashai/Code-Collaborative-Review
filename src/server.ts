@@ -6,6 +6,7 @@ import projectRoutes from "./routes/projectRoutes.js";
 import submissionRoutes from "./routes/submissionRoutes.js";
 import commentRoutes from "./routes/commentRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/submissions", submissionRoutes);
 app.use("/api", commentRoutes);
 app.use("/api/submissions", reviewRoutes);
+app.use("/api/users", notificationRoutes);
 
 // Start server
 app.listen(PORT, async () => {
