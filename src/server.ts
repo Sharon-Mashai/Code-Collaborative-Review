@@ -10,6 +10,8 @@ import reviewRoutes from "./routes/reviewRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import { setupWebSocket } from "./websocket.js";
 
+import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
+
 const app = express();
 
 const PORT = 3000;
@@ -26,6 +28,13 @@ app.use("/api", commentRoutes);
 app.use("/api/submissions", reviewRoutes);
 app.use("/api/users", notificationRoutes);
 
+// Handles routes that do not exist
+app.use(notFound);
+
+// Global error handler
+
+app.use(errorHandler);
+
 // Create HTTP server
 const server = createServer(app);
 
@@ -38,16 +47,11 @@ server.listen(PORT, async () => {
     await pool.query("SELECT NOW()");
 
     console.log("Connected to PostgreSQL successfully");
-    console.log(
-      `Server is running on http://localhost:${PORT}`,
-    );
-    console.log(
-      `WebSocket server is running on ws://localhost:${PORT}`,
-    );
+
+    console.log(`Server is running on http://localhost:${PORT}`);
+
+    console.log(`WebSocket server is running on ws://localhost:${PORT}`);
   } catch (error) {
-    console.error(
-      "Database connection failed:",
-      error,
-    );
+    console.error("Database connection failed:", error);
   }
 });
