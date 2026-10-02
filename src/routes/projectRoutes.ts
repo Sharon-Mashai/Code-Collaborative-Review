@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createProject, getProjects, assignMember, removeMember,} from "../controllers/projectController.js";
+import { createProject, getProjects, assignMember, removeMember, getProjectStats,} from "../controllers/projectController.js";
 import { getSubmissionsByProject } from "../controllers/submissionController.js";
 import { authenticate, authorize } from "../middleware/authMiddleware.js";
 
@@ -11,11 +11,14 @@ router.post("/", authenticate, createProject);
 // Get all projects
 router.get("/", authenticate, getProjects);
 
+// Get project statistics
+router.get("/:id/stats", authenticate, getProjectStats);
+
 // Assign member to project
 router.post("/:id/members", authenticate, authorize("reviewer"), assignMember);
 
 // Remove member from project
-router.delete("/:id/members/:userId", authenticate, authorize("reviewer"),removeMember,);
+router.delete( "/:id/members/:userId", authenticate, authorize("reviewer"), removeMember,);
 
 // Get submissions by project
 router.get("/:id/submissions", authenticate, getSubmissionsByProject);
