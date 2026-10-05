@@ -1228,75 +1228,59 @@ The following screenshots demonstrate the main functionality of the Code Collabo
 
 ## User Registration
 
-![User Registration](screenshots/register.png)
+![User Registration](assets/Register.png)
 
 ## User Login
 
-![User Login](screenshots/login.png)
+![User Login](assets/Login.png)
 
 ## Create Project
 
-![Create Project](screenshots/create-project.png)
+![Create Project](assets/Create-Project.png)
 
 ## Assign Project Member
 
-![Assign Project Member](screenshots/assign-member.png)
+![Assign Project Member](assets/assign-member.png)
 
 ## Create Code Submission
 
-![Create Submission](screenshots/create-submission.png)
+![Create Submission](assets/code-submission.png)
 
 ## View Project Submissions
 
-![Project Submissions](screenshots/project-submissions.png)
+![Project Submissions](assets/get-submission.png)
 
 ## Add Review Comment
 
-![Add Review Comment](screenshots/add-comment.png)
+![Add Review Comment](assets/review-comment.png)
 
 ## Update Submission Status
 
-![Update Submission Status](screenshots/update-status.png)
+![Update Submission Status](assets/update-status.png)
 
 ## Approve Submission
 
-![Approve Submission](screenshots/approve-submission.png)
+![Approve Submission](assets/approve-status.png)
 
 ## Request Changes
 
-![Request Changes](screenshots/request-changes.png)
+![Request Changes](assets/request-changes.png)
 
 ## Review History
 
-![Review History](screenshots/review-history.png)
+![Review History](assets/Review-History.png)
 
 ## User Notifications
 
-![User Notifications](screenshots/notifications.png)
+![User Notifications](assets/user-notification.png)
 
 ## Project Statistics
 
-![Project Statistics](screenshots/project-stats.png)
+![Project Statistics](assets/projectStats.png)
 
 ## WebSocket Connection
 
 ![WebSocket Connection](screenshots/websocket-connection.png)
-
-## Real-Time WebSocket Notification
-
-![WebSocket Notification](screenshots/websocket-notification.png)
-
-## Validation
-
-![Validation](screenshots/validation.png)
-
-## Authorization
-
-![Authorization](screenshots/authorization.png)
-
-## Error Handling
-
-![Error Handling](screenshots/error-handling.png)
 
 ---
 
